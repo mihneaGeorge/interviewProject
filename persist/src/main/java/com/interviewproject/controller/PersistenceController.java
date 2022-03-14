@@ -32,7 +32,8 @@ public class PersistenceController {
         return new ResponseEntity<>(resultTransaction, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/{cnp}/report")
+    @GetMapping(value = "/report/{cnp}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
     public ResponseEntity<Report> getReportForUser(@PathVariable String cnp) {
         return persistenceService.generateReport(cnp);
     }

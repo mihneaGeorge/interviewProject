@@ -8,7 +8,9 @@ import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ public class PersistenceService {
     private static final String NAME = "name";
     private static final String IBAN = "iban";
     private static final String DESCRIPTION = "description";
+    public static final String TRANSACTIONS = "transactions";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -42,24 +45,29 @@ public class PersistenceService {
                        match(where(CNP).is(cnp)),
                         group(TRANSACTION_TYPE, NAME, IBAN).push(DESCRIPTION).as(DESCRIPTION).sum(SUM).as(TOTAL_SUM).count().as(TRANSACTION_COUNT),
                         group(ID_PREFIX + NAME, ID_PREFIX + IBAN).push(
-                                new Document("transactionType", "$_id.transactionType")
-                                        .append("totalSum", "$totalSum")
-                                        .append("transactionCount", "$transactionCount")
-                                        .append("description", "$description")
-                        ).as("transactions"),
+                                new Document(TRANSACTION_TYPE, ID_PREFIX + TRANSACTION_TYPE)
+                                        .append(TOTAL_SUM, OPERATOR_PREFIX + TOTAL_SUM)
+                                        .append(TRANSACTION_COUNT, OPERATOR_PREFIX + TRANSACTION_COUNT)
+                                        .append(DESCRIPTION, OPERATOR_PREFIX + DESCRIPTION)
+                        ).as(TRANSACTIONS),
                         addFields().addFieldWithValue(NAME, ID_PREFIX + NAME).addFieldWithValue(IBAN, ID_PREFIX + IBAN).build(),
-                        project("transactions", NAME, IBAN)
+                        project(TRANSACTIONS, NAME, IBAN)
                 ),
                 Transaction.COLLECTION_NAME,
                 Report.class
             );
         Report report = result.getUniqueMappedResult();
-        report.setCnp(cnp);
-        fillInMissingTransactionTypeReport(report);
 
-        System.out.println(report);
+        if (report != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            report.setCnp(cnp);
+            fillInMissingTransactionTypeReport(report);
 
-        return new ResponseEntity<>(report, HttpStatus.OK);
+            return new ResponseEntity<>(report, headers, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
     }
 
     private void fillInMissingTransactionTypeReport(Report report) {
