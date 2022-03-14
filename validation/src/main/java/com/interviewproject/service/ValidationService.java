@@ -50,7 +50,6 @@ public class ValidationService {
     @Async("asyncExec")
     @Retryable(value = InterruptedException.class)
     public CompletableFuture<Transaction> sendTransaction(Transaction transaction) throws InterruptedException, URISyntaxException {
-        logger.info("Sending: " + transaction);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -59,7 +58,6 @@ public class ValidationService {
         HttpEntity<Transaction> httpEntity = new HttpEntity<>(transaction, headers);
 
         Transaction result = restTemplate.postForObject(uri, httpEntity, Transaction.class);
-        logger.info("Got result: " + result);
 
         return CompletableFuture.completedFuture(result);
     }
