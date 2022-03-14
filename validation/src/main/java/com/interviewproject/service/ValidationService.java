@@ -3,9 +3,7 @@ package com.interviewproject.service;
 import com.interviewproject.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.validation.ValidationException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
@@ -29,21 +28,21 @@ public class ValidationService {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    public void validateTransaction(Transaction transaction) throws Exception, InterruptedException {
+    public void validateTransaction(Transaction transaction) throws ValidationException, InterruptedException, URISyntaxException {
         if (transaction.getIban() == null) {
-            throw new Exception("IBAN cannot be null!");
+            throw new ValidationException("IBAN cannot be null!");
         }
         if (transaction.getCnp() == null) {
-            throw new Exception("User CNP cannot be null!");
+            throw new ValidationException("User CNP cannot be null!");
         }
         if (transaction.getName() == null) {
-            throw new Exception("User name cannot be null!");
+            throw new ValidationException("User name cannot be null!");
         }
         if (transaction.getTransactionType() == null) {
-            throw new Exception("Transaction type cannot be null!");
+            throw new ValidationException("Transaction type cannot be null!");
         }
         if (transaction.getSum() == null) {
-            throw new Exception("Sum cannot be null!");
+            throw new ValidationException("Sum cannot be null!");
         }
         sendTransaction(transaction);
     }

@@ -2,7 +2,6 @@ package com.interviewproject.model;
 
 import com.interviewproject.util.TransactionType;
 import lombok.Data;
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
